@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Fashion MNIST Classification</title>
+		<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+		<style>
+			body {
+				font-family: Arial, sans-serif;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				height: 100vh;
+			}
+			canvas {
+				border: 1px solid black;
+			}
+			#output {
+				margin-top: 20px;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>Fashion MNIST Classification</h1>
+		<canvas id="canvas" width="280" height="280"></canvas>
+		<button id="classify-btn">Classify</button>
+		<div id="output"></div>
+
+		<script>
+			const canvas = document.getElementById("canvas");
+			const ctx = canvas.getContext("2d");
+			const classifyBtn = document.getElementById("classify-btn");
+			const outputDiv = document.getElementById("output");
+			let model;
+
+			canvas.addEventListener("mousedown", startDrawing);
+			canvas.addEventListener("mouseup", stopDrawing);
+			canvas.addEventListener("mousemove", draw);
+
+			let isDrawing = false;
+
+			function startDrawing() {
+				isDrawing = true;
+				ctx.beginPath();
+			}
+
+			function stopDrawing() {
+				isDrawing = false;
+			}
+
+			function draw(event) {
+				if (!isDrawing) return;
+
+				ctx.lineWidth = 10;
+				ctx.lineCap = "round";
+				ctx.strokeStyle = "black";
+
+				ctx.lineTo(
+					event.clientX - canvas.offsetLeft,
+					event.clientY - canvas.offsetTop
+				);
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(
+					event.clientX - canvas.offsetLeft,
+					event.clientY - canvas.offsetTop
+				);
+			}
+
+			async function loadModel() {
+				try {
+					model = await tf.loadGraphModel(
+						"https://tfhub.dev/google/imagenet/mobilenet_v2_100_128/classification/5",
+						{ fromTFHub: true }
+					);
+					console.log("Model loaded");
+				} catch (error) {
+					console.error("Error loading model:", error);
+				}
+			}
+
+			async function classifyImage() {
+				try {
+					const imageData = ctx.getImageData(
+						0,
+						0,
+						canvas.width,
+						canvas.height
+					);
+					let img = tf.browser.fromPixels(imageData, 1);
+
+					// Convert grayscale image to RGB by stacking the image three times
+					img = tf.image
+						.resizeNearestNeighbor(img, [128, 128])
+						.toFloat()
+						.div(tf.scalar(127.5))
+						.sub(tf.scalar(1))
+						.expandDims(0);
+
+					// Add color dimension
+					img = tf.concat([img, img, img], 3);
+
+					const outputTensor = model.execute({ images: img });
+					console.log(outputTensor);
+
+					const predictions = outputTensor.arraySync()[0];
+					const predictedLabel = predictions.indexOf(
+						Math.max(...predictions)
+					);
+
+					const labels = [
+						"T-shirt/top",
+						"Trouser",
+						"Pullover",
+						"Dress",
+						"Coat",
+						"Sandal",
+						"Shirt",
+						"Sneaker",
+						"Bag",
+						"Ankle boot",
+					];
+					outputDiv.innerText = `Prediction: ${labels[predictedLabel]}`;
+				} catch (error) {
+					console.error("Error during classification:", error);
+				}
+			}
+
+			classifyBtn.addEventListener("click", classifyImage);
+			loadModel();
+		</script>
+	</body>
+</html>
