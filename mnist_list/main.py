@@ -7,8 +7,6 @@
 import tensorflow as tf
 from tensorflow.keras.models import Sequential # type: ignore
 from tensorflow.keras.layers import Dense, Flatten, Conv2D, MaxPooling2D # type: ignore
-from pathlib import Path
-import os
 
 # Load and preprocess the MNIST dataset
 mnist = tf.keras.datasets.mnist
