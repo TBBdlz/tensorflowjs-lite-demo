@@ -1,3 +1,9 @@
+# How to put ML model into small device
+# e.g. Raspberry Pi, Arduino, Smart Phones, etc.
+# 1. Write ML model in native language
+# 2. Just deploy ML on the web and let the device access it
+# 3. Deploy (tflite) lite model on the device
+
 import tensorflow as tf
 from tensorflow.keras.models import Sequential # type: ignore
 from tensorflow.keras.layers import Dense, Flatten, Conv2D, MaxPooling2D # type: ignore
